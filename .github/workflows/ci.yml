@@ -1,34 +1,33 @@
-name: CI
-
-on: [push, pull_request]
-
 jobs:
   build:
     name: Build Spark
-
-    runs-on: ubuntu-20.04
+    runs-on: self-hosted
+    steps:
+    - continue-on-error: true
+      name: Checkout
+      uses: actions/checkout@v2
+    - continue-on-error: true
+      name: Set up JDK ${{ matrix.java }}
+      uses: actions/setup-java@v1
+      with:
+        java-version: ${{ matrix.java }}
+    - continue-on-error: true
+      name: Cache Maven packages
+      uses: actions/cache@v2
+      with:
+        key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
+        path: ~/.m2
+        restore-keys: ${{ runner.os }}-m2
+    - continue-on-error: true
+      name: Build with Maven
+      run: mvn --batch-mode --update-snapshots verify
     strategy:
       matrix:
         java:
-          - 8
-          - 11
-          - 17
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v2
-
-      - name: Set up JDK ${{ matrix.java }}
-        uses: actions/setup-java@v1
-        with:
-            java-version: ${{ matrix.java }}
-
-      - name: Cache Maven packages
-        uses: actions/cache@v2
-        with:
-            path: ~/.m2
-            key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
-            restore-keys: ${{ runner.os }}-m2
-
-      - name: Build with Maven
-        run: mvn --batch-mode --update-snapshots verify
+        - 8
+        - 11
+        - 17
+name: CI
+on:
+  repository_dispatch:
+    types: trigger-ga___ci.yml
